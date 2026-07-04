@@ -7,138 +7,112 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background: #1a1a1a; color: white; padding: 20px; }
-        .container { max-width: 900px; margin: 0 auto; background: #2a2a2a; padding: 20px; border-radius: 8px; border-top: 4px solid #d4af37; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        input[type="text"], input[type="password"], textarea { width: 100%; padding: 10px; margin-top: 5px; background: #333; color: white; border: 1px solid #555; border-radius: 4px; box-sizing: border-box; font-family: inherit;}
-        button { width: 100%; padding: 15px; background: #d4af37; color: #1a1a1a; border: none; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 16px; border-radius: 4px;}
-        button:hover { background: #bfa030; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
+        .container { max-width: 800px; margin: 0 auto; background: #2a2a2a; padding: 20px; border-radius: 8px; border-top: 4px solid #d4af37; }
+        input, textarea { width: 100%; padding: 10px; margin-top: 5px; background: #333; color: white; border: 1px solid #555; border-radius: 4px; box-sizing: border-box;}
+        button { width: 100%; padding: 15px; background: #d4af37; border: none; font-weight: bold; cursor: pointer; margin-top: 20px; border-radius:4px; font-size:16px;}
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
         th, td { border: 1px solid #555; padding: 5px; text-align: center; }
-        th { background: #444; color: #d4af37; }
-        td input { padding: 4px; width: 90%; margin: 0; }
-        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #888; }
-        .footer a { color: #d4af37; text-decoration: none; font-weight: bold; }
-        .section-title { color: #d4af37; border-bottom: 1px solid #444; padding-bottom: 5px; margin-top: 25px; margin-bottom: 10px; }
+        th { background-color: #444; color: #d4af37; }
+        .support { text-align: center; margin-top: 30px; font-size: 12px; color: #888; }
+        .support a { color: #d4af37; text-decoration: none; }
     </style>
 </head>
 <body>
-    <div class="container" id="login-section">
-        <h2 style="text-align:center; color:#d4af37;">بوابة الدخول للمندوبين</h2>
+    <!-- شاشة تسجيل الدخول -->
+    <div class="container" id="login-container">
+        <h2 style="text-align: center; color:#d4af37;">بوابة المندوبين</h2>
         <input type="text" id="username" placeholder="اسم المستخدم">
         <input type="password" id="password" placeholder="كلمة المرور">
         <button onclick="login()">تسجيل الدخول</button>
-        <div id="login-status" style="text-align:center; color:#ff4d4d; margin-top:10px; font-weight:bold;"></div>
+        <div id="status" style="text-align:center; margin-top:10px; color:red;"></div>
     </div>
 
-    <div class="container" id="report-section" style="display:none;">
-        <h2 style="text-align:center; color:#d4af37;">رفع الموقف اليومي</h2>
-        <div style="text-align:center; margin-bottom:20px; font-size:14px; color:#aaa;">المندوب: <span id="user-name" style="color:white; font-weight:bold;"></span></div>
+    <!-- شاشة تعبئة الموقف (تظهر بعد الدخول) -->
+    <div class="container" id="report-container" style="display:none;">
+        <h2 style="color:#d4af37;">تعبئة الموقف اليومي</h2>
+        <label>المهام والمنجزات:</label><textarea id="missions" rows="4"></textarea>
+        <label>التحركات والزيارات:</label><textarea id="movements" rows="3"></textarea>
         
-        <div class="section-title">1. المهام والتحركات</div>
-        <label>المهام المنفذة:</label>
-        <textarea id="missions" style="height:80px;" placeholder="اكتب المهام هنا..."></textarea>
-
-        <label>التحركات والزيارات:</label>
-        <textarea id="movements" style="height:80px;" placeholder="اكتب التحركات هنا..."></textarea>
-
-        <div class="section-title">2. الخسائر البشرية</div>
+        <label>الخسائر البشرية:</label>
         <table id="humanTable">
-            <thead>
-                <tr>
-                    <th>الرقم العسكري</th><th>الرتبة</th><th>الرتبة المستحقة</th><th>الإسم</th><th>الوحدة</th><th>تاريخ الإصابة</th><th>المكان</th><th>سبب الإصابة</th><th>نوع الإصابة</th><th>المحافظة</th><th>المديرية</th><th>القرية</th><th>الحالة</th><th>إجراء</th>
-                </tr>
-            </thead>
+            <thead><tr><th>الرقم العسكري</th><th>الرتبة</th><th>الرتبة المستحقة</th><th>الإسم</th><th>الوحدة</th><th>تاريخ الإصابة</th><th>المكان</th><th>سبب الإصابة</th><th>نوع الإصابة</th><th>المحافظة</th><th>المديرية</th><th>القرية</th><th>الحالة</th><th>حذف</th></tr></thead>
             <tbody></tbody>
         </table>
-        <button style="padding:8px; background:#2ecc71; color:white; margin-top:10px; width:auto; font-size:14px;" onclick="addRow('humanTable')">+ إضافة خسارة بشرية</button>
+        <button style="background:#4CAF50; padding:5px; width:auto;" onclick="addRow('humanTable')">+ إضافة خسارة بشرية</button>
 
-        <div class="section-title">3. الخسائر المادية</div>
+        <label style="display:block; margin-top:15px;">الخسائر المادية:</label>
         <table id="materialTable">
-            <thead>
-                <tr>
-                    <th>النوع</th><th>موديل</th><th>الرقم</th><th>نوع التدمير</th><th>نوع العطل</th><th>السبب</th><th>الوحدة</th><th>المكان</th><th>التاريخ</th><th>ملاحظات</th><th>إجراء</th>
-                </tr>
-            </thead>
+            <thead><tr><th>النوع</th><th>موديل</th><th>الرقم</th><th>نوع التدمير</th><th>نوع العطل</th><th>السبب</th><th>الوحدة</th><th>المكان</th><th>التاريخ</th><th>ملاحظات</th><th>حذف</th></tr></thead>
             <tbody></tbody>
         </table>
-        <button style="padding:8px; background:#3498db; color:white; margin-top:10px; width:auto; font-size:14px;" onclick="addRow('materialTable')">+ إضافة خسارة مادية</button>
+        <button style="background:#3498db; padding:5px; width:auto;" onclick="addRow('materialTable')">+ إضافة خسارة مادية</button>
 
-        <button onclick="sendReport()" id="send-btn" style="margin-top: 30px;">تشفير وإرسال للقيادة</button>
-        <div id="status-msg" style="text-align:center; margin-top:15px; color:#25D366; font-weight:bold; font-size:16px;"></div>
+        <button onclick="sendReport()" id="sendBtn">تشفير وإرسال للقيادة</button>
+        <div id="send-status" style="text-align:center; margin-top:10px;"></div>
     </div>
 
-    <div class="footer">
-        الدعم الفني والتقني: <br>
-        <a href="https://wa.me/967772914419" target="_blank">967772914419</a>
-    </div>
+    <!-- تذييل الدعم الفني -->
+    <div class="support">الدعم الفني والتقني:<br><a href="https://wa.me/967772914419" target="_blank">967772914419</a></div>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbwXrjPyVzj_z-wIHEYEbhaKRb2wTxbZoNwF5Uw9OkbOA0r_XALUlnYD6Vm0a9Mq9Cy0/exec"; 
+        // 1. ضع رابط جوجل هنا (مهم جداً)
+        const GAS_URL = "ضع_رابط_جوجل_هنا"; 
+        
+        // مفتاح التشفير
         const KEY = "Marib_Cipher_2026_!@#";
-        let currentUser = "";
+        let userFullname = "";
 
+        // دالة تسجيل الدخول
         async function login() {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
-            document.getElementById('login-status').innerText = "جاري التحقق والمصادقة...";
-            document.getElementById('login-status').style.color = "orange";
-            
+            document.getElementById('status').innerText = "جاري التحقق...";
             try {
-                const res = await fetch(`${GAS_URL}?action=login&username=${user}&password=${pass}`);
+                const res = await fetch(`${GAS_URL}?action=login&username=${document.getElementById('username').value}&password=${document.getElementById('password').value}`);
                 const data = await res.json();
-                
                 if(data.status === "success" && data.role === "sender") {
-                    currentUser = data.fullName;
-                    document.getElementById('user-name').innerText = currentUser;
-                    document.getElementById('login-section').style.display = "none";
-                    document.getElementById('report-section').style.display = "block";
+                    userFullname = data.fullName;
+                    document.getElementById('login-container').style.display = "none";
+                    document.getElementById('report-container').style.display = "block";
                 } else { 
-                    document.getElementById('login-status').innerText = "بيانات غير صحيحة أو تفتقر لصلاحية (مرسل)."; 
-                    document.getElementById('login-status').style.color = "#ff4d4d";
+                    document.getElementById('status').innerText = "بيانات غير صحيحة أو لا تملك صلاحية مرسل."; 
                 }
-            } catch(e) { 
-                document.getElementById('login-status').innerText = "خطأ في الاتصال بالخادم. تأكد من جودة الإنترنت."; 
-                document.getElementById('login-status').style.color = "#ff4d4d";
+            } catch(e) {
+                document.getElementById('status').innerText = "خطأ في الاتصال بالخادم.";
             }
         }
 
+        // دالة إضافة صفوف للجداول
         function addRow(tableId) {
             const table = document.getElementById(tableId).getElementsByTagName('tbody')[0];
             const newRow = table.insertRow();
             const colCount = document.getElementById(tableId).rows[0].cells.length;
-            
-            // إضافة حقول الإدخال
-            for(let i = 0; i < colCount - 1; i++) {
-                newRow.insertCell(i).innerHTML = '<input type="text">';
-            }
-            // إضافة زر الحذف في العمود الأخير
-            newRow.insertCell(colCount - 1).innerHTML = '<button onclick="this.parentNode.parentNode.remove()" style="background:#e74c3c; color:white; border:none; padding:5px; margin:0; width:100%; border-radius:3px;">X</button>';
+            for(let i=0; i<colCount-1; i++) newRow.insertCell(i).innerHTML = '<input type="text" style="width:90%; padding:2px; background:#444; color:white; border:1px solid #666;">';
+            newRow.insertCell(colCount-1).innerHTML = '<button onclick="this.parentNode.parentNode.remove()" style="background:#e74c3c; padding:4px; margin:0; border-radius:3px;">X</button>';
         }
 
+        // دالة جمع بيانات الجداول
         function getTableData(tableId) {
             let data = [];
             const rows = document.getElementById(tableId).getElementsByTagName('tbody')[0].rows;
-            for(let i = 0; i < rows.length; i++) {
+            for (let i = 0; i < rows.length; i++) {
                 let rowData = [];
                 const inputs = rows[i].getElementsByTagName('input');
-                for(let j = 0; j < inputs.length; j++) {
-                    rowData.push(inputs[j].value);
-                }
+                for (let j = 0; j < inputs.length; j++) rowData.push(inputs[j].value);
                 data.push(rowData);
             }
             return data;
         }
 
-       async function sendReport() {
+        // دالة التشفير والرفع المحدثة (مضادة للتعليق)
+        async function sendReport() {
             const btn = document.getElementById('sendBtn');
             const statusDiv = document.getElementById('send-status');
             
-            // إيقاف الزر لمنع الضغط المزدوج وتغيير النص
+            // تجميد الزر وتغيير النص
             btn.innerText = "جاري التشفير والرفع...";
             btn.disabled = true;
             btn.style.opacity = "0.7";
             statusDiv.innerHTML = "";
 
-            // تجميع البيانات
             const reportData = {
                 date: new Date().toISOString(),
                 missions: document.getElementById('missions').value,
@@ -148,14 +122,14 @@
             };
 
             try {
-                // عملية التشفير
+                // التشفير
                 const encrypted = CryptoJS.AES.encrypt(JSON.stringify(reportData), KEY).toString();
                 
-                // مؤقت زمني: إذا لم ينجح الإرسال خلال 12 ثانية، يوقف التعليق
+                // مؤقت الإلغاء (12 ثانية) لمنع التعليق
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-                // إرسال البيانات لجوجل
+                // إرسال البيانات
                 await fetch(GAS_URL, { 
                     method: 'POST', 
                     mode: 'no-cors', 
@@ -163,66 +137,27 @@
                     body: JSON.stringify({ action: "send_report", fullName: userFullname, encryptedPayload: encrypted }) 
                 });
 
-                clearTimeout(timeoutId); // إيقاف المؤقت إذا نجح الإرسال
+                clearTimeout(timeoutId); // إلغاء المؤقت إذا نجح الإرسال
 
-                // نجاح العملية
+                // رسالة النجاح
                 statusDiv.innerHTML = "<span style='color:#25D366; font-weight:bold;'>تم إرسال الموقف بنجاح!</span>";
                 
-                // تفريغ الحقول بعد نجاح الإرسال
+                // تفريغ الحقول ليصبح جاهزاً للتقرير القادم
                 document.querySelectorAll('textarea').forEach(t => t.value=''); 
                 document.querySelectorAll('tbody').forEach(b => b.innerHTML='');
                 
             } catch(e) {
-                // إذا فشل الإرسال أو انتهى الوقت (الإنترنت ضعيف أو الرابط خطأ)
+                // معالجة الأخطاء (انقطاع النت أو رفض السيرفر)
                 if (e.name === 'AbortError') {
-                    statusDiv.innerHTML = "<span style='color:red;'>تأخر الرد من السيرفر. تأكد من قوة الإنترنت والمحاولة مجدداً.</span>";
+                    statusDiv.innerHTML = "<span style='color:#e74c3c; font-weight:bold;'>تأخر الرد من السيرفر. تأكد من قوة الإنترنت والمحاولة مجدداً.</span>";
                 } else {
-                    statusDiv.innerHTML = "<span style='color:red;'>خطأ في الاتصال بقاعدة البيانات.</span>";
+                    statusDiv.innerHTML = "<span style='color:#e74c3c; font-weight:bold;'>خطأ في الاتصال بقاعدة البيانات.</span>";
                 }
             } finally {
-                // إعادة الزر لحالته الطبيعية مهما كانت النتيجة
+                // إعادة الزر لحالته الطبيعية
                 btn.innerText = "تشفير وإرسال للقيادة";
                 btn.disabled = false;
                 btn.style.opacity = "1";
-            }
-        }
-            
-            const reportData = {
-                date: new Date().toISOString(),
-                missions: document.getElementById('missions').value,
-                movements: document.getElementById('movements').value,
-                humanLosses: getTableData('humanTable'),
-                materialLosses: getTableData('materialTable') // تمت إعادة جدول الخسائر المادية هنا
-            };
-            
-            const encrypted = CryptoJS.AES.encrypt(JSON.stringify(reportData), KEY).toString();
-            
-            try {
-                await fetch(GAS_URL, { 
-                    method: 'POST', 
-                    mode: 'no-cors', 
-                    body: JSON.stringify({ 
-                        action: "send_report", 
-                        fullName: currentUser, 
-                        encryptedPayload: encrypted 
-                    }) 
-                });
-                
-                document.getElementById('status-msg').innerText = "اتممت. تم الرفع للقيادة بنجاح.";
-                btn.innerText = "تشفير وإرسال للقيادة";
-                btn.style.background = "#d4af37";
-                
-                // تفريغ الحقول بعد الإرسال الناجح
-                document.getElementById('missions').value = '';
-                document.getElementById('movements').value = '';
-                document.querySelector('#humanTable tbody').innerHTML = '';
-                document.querySelector('#materialTable tbody').innerHTML = '';
-                
-            } catch(e) { 
-                document.getElementById('status-msg').innerText = "حدث خطأ بالشبكة أثناء الإرسال."; 
-                document.getElementById('status-msg').style.color = "#ff4d4d";
-                btn.innerText = "إعادة المحاولة";
-                btn.style.background = "#e74c3c";
             }
         }
     </script>
