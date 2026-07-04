@@ -105,23 +105,22 @@
             return data;
         }
 
-        async function sendReport() {
+      async function sendReport() {
             const btn = document.getElementById('sendBtn');
             const statusDiv = document.getElementById('send-status');
             
-            // تحقق سريع للتأكد من أن المكتبة تم تحميلها بنجاح قبل العمل
             if (typeof CryptoJS === 'undefined') {
-                statusDiv.innerHTML = "<span style='color:#e74c3c; font-weight:bold;'>الإنترنت ضعيف جداً ولم يتمكن من تحميل مكتبة التشفير. يرجى تحديث الصفحة والمحاولة.</span>";
+                statusDiv.innerHTML = "<span style='color:#e74c3c; font-weight:bold;'>خطأ في تحميل مكتبة التشفير.</span>";
                 return;
             }
 
             btn.innerText = "جاري التشفير والرفع...";
             btn.disabled = true;
-            btn.style.opacity = "0.7";
             statusDiv.innerHTML = "";
 
             try {
-                const reportData = {
+                // 1. تعريف المتغير بالاسم الصحيح (payload)
+                const payload = {
                     date: new Date().toISOString(),
                     missions: document.getElementById('missions').value,
                     movements: document.getElementById('movements').value,
@@ -129,17 +128,22 @@
                     materialLosses: getTableData('materialTable')
                 };
 
-               const encrypted = CryptoJS.AES.encrypt(JSON.stringify(payload), KEY).toString();
-const safeEncrypted = encrypted.replace(/\+/g, 'PLUS').replace(/\//g, 'SLASH').replace(/=/g, 'EQUAL');
+                // 2. التشفير الآمن الذي لا يتأثر برموز جوجل شيت
+                const encrypted = CryptoJS.AES.encrypt(JSON.stringify(payload), KEY).toString();
+                const safeEncrypted = encrypted.replace(/\+/g, 'PLUS').replace(/\//g, 'SLASH').replace(/=/g, 'EQUAL');
                 
+                // 3. الإرسال (لاحظ أننا نرسل safeEncrypted)
                 await fetch(GAS_URL, { 
                     method: 'POST', 
                     mode: 'no-cors',
-                    body: JSON.stringify({ action: "send_report", fullName: userFullname, encryptedPayload: encrypted }) 
+                    body: JSON.stringify({ 
+                        action: "send_report", 
+                        fullName: userFullname, 
+                        encryptedPayload: safeEncrypted 
+                    }) 
                 });
 
                 statusDiv.innerHTML = "<span style='color:#25D366; font-weight:bold;'>تم إرسال الموقف بنجاح!</span>";
-                
                 document.querySelectorAll('textarea').forEach(t => t.value=''); 
                 document.querySelectorAll('tbody').forEach(b => b.innerHTML='');
                 
@@ -148,7 +152,6 @@ const safeEncrypted = encrypted.replace(/\+/g, 'PLUS').replace(/\//g, 'SLASH').r
             } finally {
                 btn.innerText = "تشفير وإرسال للقيادة";
                 btn.disabled = false;
-                btn.style.opacity = "1";
             }
         }
     </script>
