@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>منظومة الرفع - الإدارات</title>
-    <!-- مكتبة التشفير العسكري -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <!-- تم تغيير سيرفر مكتبة التشفير إلى سيرفر أقوى وموثوق ليتوافق مع جميع الهواتف -->
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+    
     <style>
         body { font-family: Arial, sans-serif; background: #1a1a1a; color: white; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; background: #2a2a2a; padding: 20px; border-radius: 8px; border-top: 4px solid #d4af37; }
@@ -19,7 +21,7 @@
     </style>
 </head>
 <body>
-    <!-- 1. شاشة تسجيل الدخول -->
+    <!-- شاشة تسجيل الدخول -->
     <div class="container" id="login-container">
         <h2 style="text-align: center; color:#d4af37;">بوابة المندوبين</h2>
         <input type="text" id="username" placeholder="اسم المستخدم">
@@ -28,7 +30,7 @@
         <div id="status" style="text-align:center; margin-top:10px; color:#e74c3c;"></div>
     </div>
 
-    <!-- 2. شاشة تعبئة الموقف (تظهر بعد الدخول) -->
+    <!-- شاشة تعبئة الموقف -->
     <div class="container" id="report-container" style="display:none;">
         <h2 style="color:#d4af37;">تعبئة الموقف اليومي</h2>
         
@@ -52,7 +54,6 @@
         </table>
         <button style="background:#3498db; padding:5px; width:auto; color:white;" onclick="addRow('materialTable')">+ إضافة خسارة مادية</button>
 
-        <!-- زر التشفير والرفع -->
         <button onclick="sendReport()" id="sendBtn">تشفير وإرسال للقيادة</button>
         <div id="send-status" style="text-align:center; margin-top:10px;"></div>
     </div>
@@ -61,14 +62,12 @@
     <div class="support">الدعم الفني والتقني:<br><a href="https://wa.me/967772914419" target="_blank">967772914419</a></div>
 
     <script>
-        // ⚠️ هام جداً: ضع الرابط الخاص بك بين علامتي التنصيص أدناه ⚠️
+        // ⚠️ ضع الرابط الخاص بك بين علامتي التنصيص أدناه ⚠️
         const GAS_URL = "https://script.google.com/macros/s/AKfycbwXrjPyVzj_z-wIHEYEbhaKRb2wTxbZoNwF5Uw9OkbOA0r_XALUlnYD6Vm0a9Mq9Cy0/exec"; 
         
-        // مفتاح التشفير السري
         const KEY = "Marib_Cipher_2026_!@#";
         let userFullname = "";
 
-        // دالة تسجيل الدخول
         async function login() {
             document.getElementById('status').innerText = "جاري التحقق...";
             try {
@@ -86,7 +85,6 @@
             }
         }
 
-        // دالة إضافة صفوف للجداول
         function addRow(tableId) {
             const table = document.getElementById(tableId).getElementsByTagName('tbody')[0];
             const newRow = table.insertRow();
@@ -95,7 +93,6 @@
             newRow.insertCell(colCount-1).innerHTML = '<button onclick="this.parentNode.parentNode.remove()" style="background:#e74c3c; padding:4px; margin:0; border-radius:3px; color:white;">X</button>';
         }
 
-        // دالة جمع بيانات الجداول
         function getTableData(tableId) {
             let data = [];
             const rows = document.getElementById(tableId).getElementsByTagName('tbody')[0].rows;
@@ -108,19 +105,22 @@
             return data;
         }
 
-        // دالة التشفير والرفع (محدثة لتتوافق مع جميع المتصفحات)
         async function sendReport() {
             const btn = document.getElementById('sendBtn');
             const statusDiv = document.getElementById('send-status');
             
-            // تجميد الزر وتغيير النص
+            // تحقق سريع للتأكد من أن المكتبة تم تحميلها بنجاح قبل العمل
+            if (typeof CryptoJS === 'undefined') {
+                statusDiv.innerHTML = "<span style='color:#e74c3c; font-weight:bold;'>الإنترنت ضعيف جداً ولم يتمكن من تحميل مكتبة التشفير. يرجى تحديث الصفحة والمحاولة.</span>";
+                return;
+            }
+
             btn.innerText = "جاري التشفير والرفع...";
             btn.disabled = true;
             btn.style.opacity = "0.7";
             statusDiv.innerHTML = "";
 
             try {
-                // تجميع البيانات
                 const reportData = {
                     date: new Date().toISOString(),
                     missions: document.getElementById('missions').value,
@@ -129,28 +129,22 @@
                     materialLosses: getTableData('materialTable')
                 };
 
-                // التشفير
                 const encrypted = CryptoJS.AES.encrypt(JSON.stringify(reportData), KEY).toString();
                 
-                // إرسال البيانات
                 await fetch(GAS_URL, { 
                     method: 'POST', 
                     mode: 'no-cors',
                     body: JSON.stringify({ action: "send_report", fullName: userFullname, encryptedPayload: encrypted }) 
                 });
 
-                // رسالة النجاح
                 statusDiv.innerHTML = "<span style='color:#25D366; font-weight:bold;'>تم إرسال الموقف بنجاح!</span>";
                 
-                // تفريغ الحقول ليصبح جاهزاً للتقرير القادم
                 document.querySelectorAll('textarea').forEach(t => t.value=''); 
                 document.querySelectorAll('tbody').forEach(b => b.innerHTML='');
                 
             } catch(e) {
-                // طباعة الخطأ بدقة في حال حدوثه
                 statusDiv.innerHTML = "<span style='color:#e74c3c; font-weight:bold;'>تفاصيل الخطأ: " + e.message + "</span>";
             } finally {
-                // إعادة الزر لحالته الطبيعية
                 btn.innerText = "تشفير وإرسال للقيادة";
                 btn.disabled = false;
                 btn.style.opacity = "1";
