@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منظومة الرفع - الإدارات</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: #1a1a1a; color: white; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: #2a2a2a; padding: 20px; border-radius: 8px; border-top: 4px solid #d4af37; }
+        input, textarea { width: 100%; padding: 10px; margin-top: 5px; background: #333; color: white; border: 1px solid #555; border-radius: 4px; box-sizing: border-box;}
+        button { width: 100%; padding: 15px; background: #d4af37; color: #1a1a1a; border: none; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 16px; border-radius: 4px;}
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+        th, td { border: 1px solid #555; padding: 5px; text-align: center; }
+        th { background: #444; color: #d4af37; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #888; }
+        .footer a { color: #d4af37; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container" id="login-section">
+        <h2 style="text-align:center; color:#d4af37;">بوابة الدخول للمندوبين</h2>
+        <input type="text" id="username" placeholder="اسم المستخدم">
+        <input type="password" id="password" placeholder="كلمة المرور">
+        <button onclick="login()">تسجيل الدخول</button>
+        <div id="login-status" style="text-align:center; color:red; margin-top:10px;"></div>
+    </div>
+
+    <div class="container" id="report-section" style="display:none;">
+        <h2 style="color:#d4af37;">رفع الموقف اليومي (<span id="user-name"></span>)</h2>
+        
+        <label>المهام المنفذة:</label>
+        <textarea id="missions" style="height:80px;"></textarea>
+
+        <label>التحركات والزيارات:</label>
+        <textarea id="movements" style="height:80px;"></textarea>
+
+        <label>الخسائر البشرية:</label>
+        <table id="humanTable">
+            <thead><tr><th>الرقم العسكري</th><th>الرتبة</th><th>الإسم</th><th>الوحدة</th><th>تاريخ الإصابة</th><th>المكان</th><th>سبب الإصابة</th><th>نوع الإصابة</th><th>الحالة</th><th>حذف</th></tr></thead>
+            <tbody></tbody>
+        </table>
+        <button style="padding:5px; background:#4CAF50; color:white; margin-top:5px;" onclick="addRow('humanTable')">+ إضافة خسارة بشرية</button>
+
+        <button onclick="sendReport()" id="send-btn">تشفير وإرسال للقيادة</button>
+        <div id="status-msg" style="text-align:center; margin-top:10px; color:#25D366; font-weight:bold;"></div>
+    </div>
+
+    <div class="footer">
+        الدعم الفني والتقني: <a href="https://wa.me/967777644293" target="_blank">967777644293</a>
+    </div>
+
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwXrjPyVzj_z-wIHEYEbhaKRb2wTxbZoNwF5Uw9OkbOA0r_XALUlnYD6Vm0a9Mq9Cy0/exec"; 
+        const KEY = "Marib_Cipher_2026_!@#";
+        let currentUser = "";
+
+        async function login() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            document.getElementById('login-status').innerText = "جاري التحقق...";
+            try {
+                const res = await fetch(`${GAS_URL}?action=login&username=${user}&password=${pass}`);
+                const data = await res.json();
+                if(data.status === "success" && data.role === "sender") {
+                    currentUser = data.fullName;
+                    document.getElementById('user-name').innerText = currentUser;
+                    document.getElementById('login-section').style.display = "none";
+                    document.getElementById('report-section').style.display = "block";
+                } else { document.getElementById('login-status').innerText = "بيانات غير صحيحة أو غير مصرح لك."; }
+            } catch(e) { document.getElementById('login-status').innerText = "خطأ في الاتصال."; }
+        }
+
+        function addRow(tableId) {
+            const table = document.getElementById(tableId).getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+            const colCount = document.getElementById(tableId).rows[0].cells.length;
+            for(let i=0; i<colCount-1; i++) newRow.insertCell(i).innerHTML = '<input type="text">';
+            newRow.insertCell(colCount-1).innerHTML = '<button onclick="this.parentNode.parentNode.remove()" style="background:red; color:white; border:none;">X</button>';
+        }
+
+        function getTableData(tableId) {
+            let data = [];
+            const rows = document.getElementById(tableId).getElementsByTagName('tbody')[0].rows;
+            for(let i=0; i<rows.length; i++) {
+                let rowData = [];
+                const inputs = rows[i].getElementsByTagName('input');
+                for(let j=0; j<inputs.length; j++) rowData.push(inputs[j].value);
+                data.push(rowData);
+            }
+            return data;
+        }
+
+        async function sendReport() {
+            document.getElementById('send-btn').innerText = "جاري التشفير...";
+            const reportData = {
+                date: new Date().toISOString(),
+                missions: document.getElementById('missions').value,
+                movements: document.getElementById('movements').value,
+                humanLosses: getTableData('humanTable')
+            };
+            const encrypted = CryptoJS.AES.encrypt(JSON.stringify(reportData), KEY).toString();
+            try {
+                await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "send_report", fullName: currentUser, encryptedPayload: encrypted }) });
+                document.getElementById('status-msg').innerText = "اتممت. تم الرفع بنجاح.";
+                document.getElementById('send-btn').innerText = "تشفير وإرسال للقيادة";
+            } catch(e) { document.getElementById('status-msg').innerText = "حدث خطأ بالشبكة."; }
+        }
+    </script>
+</body>
+</html>
