@@ -128,10 +128,64 @@
             return data;
         }
 
-        async function sendReport() {
-            const btn = document.getElementById('send-btn');
+       async function sendReport() {
+            const btn = document.getElementById('sendBtn');
+            const statusDiv = document.getElementById('send-status');
+            
+            // إيقاف الزر لمنع الضغط المزدوج وتغيير النص
             btn.innerText = "جاري التشفير والرفع...";
-            btn.style.background = "orange";
+            btn.disabled = true;
+            btn.style.opacity = "0.7";
+            statusDiv.innerHTML = "";
+
+            // تجميع البيانات
+            const reportData = {
+                date: new Date().toISOString(),
+                missions: document.getElementById('missions').value,
+                movements: document.getElementById('movements').value,
+                humanLosses: getTableData('humanTable'),
+                materialLosses: getTableData('materialTable')
+            };
+
+            try {
+                // عملية التشفير
+                const encrypted = CryptoJS.AES.encrypt(JSON.stringify(reportData), KEY).toString();
+                
+                // مؤقت زمني: إذا لم ينجح الإرسال خلال 12 ثانية، يوقف التعليق
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+                // إرسال البيانات لجوجل
+                await fetch(GAS_URL, { 
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    signal: controller.signal,
+                    body: JSON.stringify({ action: "send_report", fullName: userFullname, encryptedPayload: encrypted }) 
+                });
+
+                clearTimeout(timeoutId); // إيقاف المؤقت إذا نجح الإرسال
+
+                // نجاح العملية
+                statusDiv.innerHTML = "<span style='color:#25D366; font-weight:bold;'>تم إرسال الموقف بنجاح!</span>";
+                
+                // تفريغ الحقول بعد نجاح الإرسال
+                document.querySelectorAll('textarea').forEach(t => t.value=''); 
+                document.querySelectorAll('tbody').forEach(b => b.innerHTML='');
+                
+            } catch(e) {
+                // إذا فشل الإرسال أو انتهى الوقت (الإنترنت ضعيف أو الرابط خطأ)
+                if (e.name === 'AbortError') {
+                    statusDiv.innerHTML = "<span style='color:red;'>تأخر الرد من السيرفر. تأكد من قوة الإنترنت والمحاولة مجدداً.</span>";
+                } else {
+                    statusDiv.innerHTML = "<span style='color:red;'>خطأ في الاتصال بقاعدة البيانات.</span>";
+                }
+            } finally {
+                // إعادة الزر لحالته الطبيعية مهما كانت النتيجة
+                btn.innerText = "تشفير وإرسال للقيادة";
+                btn.disabled = false;
+                btn.style.opacity = "1";
+            }
+        }
             
             const reportData = {
                 date: new Date().toISOString(),
