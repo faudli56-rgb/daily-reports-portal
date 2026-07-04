@@ -129,7 +129,8 @@
                     materialLosses: getTableData('materialTable')
                 };
 
-                const encrypted = CryptoJS.AES.encrypt(JSON.stringify(reportData), KEY).toString();
+               const encrypted = CryptoJS.AES.encrypt(JSON.stringify(payload), KEY).toString();
+const safeEncrypted = encrypted.replace(/\+/g, 'PLUS').replace(/\//g, 'SLASH').replace(/=/g, 'EQUAL');
                 
                 await fetch(GAS_URL, { 
                     method: 'POST', 
